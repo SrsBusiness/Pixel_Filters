@@ -58,5 +58,9 @@ int main(){
     Matrix g_y = (Matrix){y_matrix, 3, 3, 1};
     XImage *edges = edge_detect(screen, &g_x, &g_y);
     write_image(edges, "edges.png");
+    filter_free_image(edges);
+    XImage *gray = gray_scale(screen, .2126, .7152, .0722);
+    write_image(gray, "gray.png");
+    filter_free_image(gray);
 }
 

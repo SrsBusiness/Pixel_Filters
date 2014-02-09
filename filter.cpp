@@ -4,6 +4,11 @@
 #include <math.h>
 
 #define abs(a) a < 0 ? -1 * a : a
+void filter_free_image(XImage *img){
+    free(img -> data);
+    free(img);
+}
+
 int *convolve(XImage *img, Matrix *m, double scale){ 
     int diff = m -> rows - 1;
     int *extended = (int *)calloc((img -> width + diff) * (img -> width + diff) * 4, sizeof(int));
@@ -26,12 +31,24 @@ int *convolve(XImage *img, Matrix *m, double scale){
             }
             result[i * 4 + j] = (char)(new_val * scale);
         }
-        result[i * 4 + 3] = 0xFF;
+        result[i * 4 + 3] = img -> data[i * 4 + 3];
     }
     return result;
 }
 
 XImage *gray_scale(XImage * img, double red_weight, double green_weight, double blue_weight){
+    XImage *result = (XImage *)malloc(sizeof(XImage));
+    char *data = (char *)calloc(img -> width * img -> height * 4, sizeof(char));
+    for(int i = 0; i < img -> width * img -> height; i++){
+        int gray = (int)(img -> data[i * 4] * blue_weight + 
+            img -> data[i * 4 + 1] * green_weight + 
+            img -> data[i * 4 + 2] * red_weight);
+        data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = gray;
+        data[i * 4 + 3] = img -> data[i * 4 + 3];
+    }
+    *result = *img;
+    result -> data = data;
+    return result;
 }
 
 XImage *edge_detect(XImage *img, Matrix *g_x, Matrix *g_y){
