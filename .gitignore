@@ -12,6 +12,10 @@
 *.la
 *.a
 
+# Assembly files
+*.s
+*.S
+
 # Images
 *.png
 *.jpeg

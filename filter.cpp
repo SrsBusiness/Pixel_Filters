@@ -39,12 +39,12 @@ char *convolve(XImage *img, Matrix *m){
          */
         /* grayscaled */
         for(int j = 0; j < m -> rows * m -> cols; j++){
-            new_val += m -> array[j] * extended[((i / img -> width) * 
+            new_val += m -> array[j] * (int)extended[((i / img -> width) * 
                     (img -> width + diff) + i % img -> width + (j / m -> rows) 
                     * (img -> width + diff) + (j % m -> cols)) * 4];
         }
         result[i * 4] = result[i * 4 + 1] = result[i * 4 + 2] = 
-            (int)(new_val * m -> scale);
+            abs((int)(new_val * m -> scale));
         result[i * 4 + 3] = img -> data[i * 4 + 3];
 
     }
@@ -130,7 +130,7 @@ XImage *edge_detect(XImage *img, Matrix *g_x, Matrix *g_y){
            data[i * 4 + 3] = 0xFF;
            */
         /*grayscaled*/
-        //int dist = abs(x[i * 4]) + abs(y[i * 4]) / 2;
+        //int dist = abs(x[i * 4]) + abs(y[i * 4]) ign;
         int dist = sqrt((x[i * 4] * x[i * 4] + y[i * 4] * y[i * 4]) / 2);
         x[i * 4] = x[i * 4 + 1] = x[i * 4 + 2] = dist;
     }
@@ -152,8 +152,6 @@ XImage *edge_detect(XImage *img, Matrix *g_x, Matrix *g_y){
 XImage *gauss_smooth(XImage *img, Matrix *gauss){
     XImage *result = (XImage *)malloc(sizeof(XImage));
     *result = *img;
-
-    printf("Result: Width: %d, Height: %d\n", result -> width, result -> height);
     result -> data = convolve_color(img, gauss);
     return result;
 }
