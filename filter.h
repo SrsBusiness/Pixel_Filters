@@ -4,7 +4,7 @@
 struct Matrix{
     int *array;
     int rows, cols;
-    int scale;
+    double scale;
 } typedef Matrix;
 
 // frees XImages created by filter functions
@@ -12,11 +12,12 @@ struct Matrix{
 // here just to be safe
 void filter_free_image(XImage *);
 
-int *convolve(XImage *, Matrix *, double);
-
+char *convolve(XImage *, Matrix *);
+char *convolve_color(XImage *, Matrix *);
 // choose weights carefully. If color x heavily weighted,
 // x becomes less distinguishable in the result
 XImage *gray_scale(XImage *, double, double, double);
 
 XImage *edge_detect(XImage *, Matrix *, Matrix *);
+XImage *gauss_smooth(XImage *, Matrix *);
 #endif

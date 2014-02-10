@@ -48,19 +48,39 @@ int main(){
     XImage *screen = XGetImage(display, root, 0, 0, width, height, AllPlanes, ZPixmap);
     printf("Width: %d, Height: %d\n", screen -> width, screen -> height);
     //write_image(screen, "test.png");
+    /*
     int x_matrix[9] = {1, 0, -1, 2, 0, -2, 1, 0, -1};
     int y_matrix[9] = {1, 2, 1, 0, 0, 0, -1, -2, -1};
-    /*
+    */
     int x_matrix[4] = {1, 0, 0, -1};
     int y_matrix[4] = {0, 1, -1, 0};
+    /*
+    Matrix g_x = (Matrix){x_matrix, 3, 3, 1 / 4.0};
+    Matrix g_y = (Matrix){y_matrix, 3, 3, 1 / 4.0};
     */
-    Matrix g_x = (Matrix){x_matrix, 3, 3, 1};
-    Matrix g_y = (Matrix){y_matrix, 3, 3, 1};
+    Matrix g_x = (Matrix){x_matrix, 2, 2, 1.0};
+    Matrix g_y = (Matrix){y_matrix, 2, 2, 1.0};
+ 
+
     XImage *edges = edge_detect(screen, &g_x, &g_y);
     write_image(edges, "edges.png");
     filter_free_image(edges);
     XImage *gray = gray_scale(screen, .2126, .7152, .0722);
     write_image(gray, "gray.png");
     filter_free_image(gray);
+    
+    int g[25] = {1, 4, 7, 4, 1,
+        4, 16, 26, 16, 4,
+        7, 26, 41, 26, 7,
+        4, 16, 26, 16, 4,
+        1, 4, 7, 4, 1
+    };
+
+    Matrix gauss = (Matrix){g, 5, 5, 1 / 271.0};
+    XImage *smooth = gauss_smooth(screen, &gauss);
+    printf("Smooth: Width: %d, Height: %d\n", smooth -> width, smooth -> height);
+    printf("Screen: Width: %d, Height: %d\n", screen -> width, screen -> height);
+    write_image(smooth, "smooth.png");
+    filter_free_image(smooth);
 }
 
