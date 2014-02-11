@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <png.h>
 
+#ifdef __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 int write_image(XImage *img, char *name){
     FILE *fp = fopen(name, "wb");
     if(!fp){
@@ -35,8 +39,38 @@ int write_image(XImage *img, char *name){
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_BGR, NULL);
 }
 
+XImage *get_screen_macosx() {
+    CGImageRef imageRef = CGDisplayCreateImage(CGMainDisplayID());
 
-int main(){
+    size_t width = CGImageGetWidth(imageRef);
+    size_t height = CGImageGetHeight(imageRef);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    unsigned char *rawData = (unsigned char*) calloc(height * width * 4, sizeof(unsigned char));
+    int bytesPerPixel = 4;
+    int bytesPerRow = bytesPerPixel * width;
+    int bitsPerComponent = 8;
+    CGContextRef context = CGBitmapContextCreate(rawData, width, height,
+                    bitsPerComponent, bytesPerRow, colorSpace,
+                    kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    CGColorSpaceRelease(colorSpace);
+
+    CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
+    CGContextRelease(context);
+
+    XImage *screen = (XImage *)calloc(1, sizeof(XImage));
+    XInitImage(screen);
+    screen -> data = (char*)rawData;
+    screen -> width = width;
+    screen -> height = height;
+    screen -> bits_per_pixel = bitsPerComponent;
+    screen -> red_mask = 0xFF000000;
+    screen -> green_mask = 0x00FF0000;
+    screen -> blue_mask = 0x0000FF00;
+
+    return screen;
+}
+
+XImage *get_screen_linux() {
     Display *display = XOpenDisplay(NULL);
     if(!display)
         exit(1);
@@ -45,10 +79,26 @@ int main(){
     XGetWindowAttributes(display, root, &gwa);
     int width = gwa.width;
     int height = gwa.height;
-    XImage *screen = XGetImage(display, root, 0, 0, width, height, AllPlanes, ZPixmap);
+    return XGetImage(display, root, 0, 0, width, height, AllPlanes, ZPixmap);
+}
+
+XImage *get_screen() {
+    #ifdef __APPLE__
+        return get_screen_macosx();
+    #elif defined __linux__
+        return get_screen_linux();
+    #elif defined _WIN32 || defined _WIN64
+        return exit(1);
+    #else
+    #error "unknown platform"
+    #endif
+}
+
+int main(){
+    XImage *screen = get_screen();
     printf("Width: %d, Height: %d\n", screen -> width, screen -> height);
     //write_image(screen, "test.png");
-    /*
+    /* 
     int x_matrix[9] = {1, 0, -1, 2, 0, -2, 1, 0, -1};
     int y_matrix[9] = {1, 2, 1, 0, 0, 0, -1, -2, -1};
     */
